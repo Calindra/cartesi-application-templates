@@ -19,13 +19,9 @@ RUN yarn install && yarn build
 # performance when loading the Cartesi Machine.
 FROM --platform=linux/riscv64 cartesi/node:20.8.0-jammy-slim
 
-ARG MACHINE_EMULATOR_TOOLS_VERSION=0.14.1
-ADD https://github.com/cartesi/machine-emulator-tools/releases/download/v${MACHINE_EMULATOR_TOOLS_VERSION}/machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb /
-RUN dpkg -i /machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb \
-  && rm /machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb
-
-LABEL io.cartesi.rollups.sdk_version=0.6.0
+LABEL io.cartesi.rollups.sdk_version=devel
 LABEL io.cartesi.rollups.ram_size=128Mi
+LABEL io.cartesi.rollups.sdk=cartesi/sdk
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN <<EOF
@@ -37,12 +33,19 @@ rm -rf /var/lib/apt/lists/* /var/log/* /var/cache/*
 useradd --create-home --user-group dapp
 EOF
 
+ARG MACHINE_EMULATOR_TOOLS_VERSION=0.15.6
+ADD https://github.com/zippiehq/cartesi-lambada-guest-tools/releases/download/v${MACHINE_EMULATOR_TOOLS_VERSION}/machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb /
+RUN dpkg -i /machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb \
+  && rm /machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb
+
+
 ENV PATH="/opt/cartesi/bin:${PATH}"
 
 WORKDIR /opt/cartesi/dapp
 COPY --from=build-stage /opt/cartesi/dapp/dist .
 
 ENV ROLLUP_HTTP_SERVER_URL="http://127.0.0.1:5004"
+ENV LAMBADA_HTTP_SERVER_URL="http://127.0.0.1:5005"
 
 ENTRYPOINT ["rollup-init"]
-CMD ["node", "index.js"]
+CMD ["lambada-http-server","lambada-init", "node", "index.js"]
