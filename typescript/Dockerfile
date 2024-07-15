@@ -21,7 +21,7 @@ FROM --platform=linux/riscv64 cartesi/node:20.8.0-jammy-slim
 
 LABEL io.cartesi.rollups.sdk_version=devel
 LABEL io.cartesi.rollups.ram_size=128Mi
-LABEL io.cartesi.rollups.sdk=cartesi/sdk
+LABEL io.cartesi.rollups.sdk_name=zippiehq/cartesi-lambada-sdk
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN <<EOF
