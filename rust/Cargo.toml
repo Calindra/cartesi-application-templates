@@ -7,3 +7,4 @@ edition = "2021"
 json = "0.12"
 hyper = { version = "0.14", features = ["http1", "runtime", "client"] }
 tokio = { version = "1.32", features = ["macros", "rt-multi-thread"] }
+ipfs-api = "0.17.0"
