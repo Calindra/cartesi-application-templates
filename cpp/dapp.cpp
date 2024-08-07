@@ -7,6 +7,28 @@
 std::string handle_advance(httplib::Client &cli, picojson::value data)
 {
     std::cout << "Received advance request data " << data << std::endl;
+    const char* lambada_server_url = std::getenv("LAMBADA_HTTP_SERVER_URL");
+
+    if(lambada_server_url) {
+        httplib::Client cli(lambada_server_url);
+        auto response_open_state = cli.Get("/open_state", {{"Content-Type","application/json"}});
+        if (!response_open_state) {
+            return "Failed to open state: " + std::to_string(response_open_state ? response_open_state->status : 0);
+        }
+        std::cout << "State opened successfully." << std::endl;
+
+        auto response_set_state = cli.Post("/set_state/output", "hello world", "application/octet-stream");
+        if (!response_set_state) {
+            return "Failed to set state: " + std::to_string(response_set_state ? response_set_state->status : 0);
+        }
+        std::cout << "State set successfully." << std::endl;
+
+        auto response_commit_state = cli.Get("/commit_state", {{"Content-Type","application/json"}});
+        if (!response_commit_state) {
+            return "Failed to commit state: " + std::to_string(response_commit_state ? response_commit_state->status : 0);
+        }
+        std::cout << "State committed successfully." << std::endl;
+    }
     return "accept";
 }
 

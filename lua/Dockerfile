@@ -18,13 +18,9 @@ EOF
 
 FROM --platform=linux/riscv64 riscv64/ubuntu:22.04
 
-ARG MACHINE_EMULATOR_TOOLS_VERSION=0.14.1
-ADD https://github.com/cartesi/machine-emulator-tools/releases/download/v${MACHINE_EMULATOR_TOOLS_VERSION}/machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb /
-RUN dpkg -i /machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb \
-  && rm /machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb
-
-LABEL io.cartesi.rollups.sdk_version=0.6.0
+LABEL io.cartesi.rollups.sdk_version=devel
 LABEL io.cartesi.rollups.ram_size=128Mi
+LABEL io.cartesi.rollups.sdk_name=zippiehq/cartesi-lambada-sdk
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN <<EOF
@@ -41,12 +37,17 @@ EOF
 COPY --from=builder /usr/local/lib/lua /usr/local/lib/lua
 COPY --from=builder /usr/local/share/lua /usr/local/share/lua
 
+ARG MACHINE_EMULATOR_TOOLS_VERSION=0.15.7
+ADD https://github.com/zippiehq/cartesi-lambada-guest-tools/releases/download/v${MACHINE_EMULATOR_TOOLS_VERSION}/machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb /
+RUN dpkg -i /machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb \
+  && rm /machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb
+
 ENV PATH="/opt/cartesi/bin:/opt/cartesi/dapp:${PATH}"
 
 WORKDIR /opt/cartesi/dapp
 COPY . .
 
 ENV ROLLUP_HTTP_SERVER_URL="http://127.0.0.1:5004"
-
+ENV LAMBADA_HTTP_SERVER_URL="http://127.0.0.1:5005"
 ENTRYPOINT ["rollup-init"]
-CMD ["lua", "dapp.lua"]
+CMD ["lambada-http-server", "lambada-init", "lua", "dapp.lua"]

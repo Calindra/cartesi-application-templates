@@ -1,14 +1,15 @@
 package main
 
 import (
-	"encoding/json"
-	"io/ioutil"
+  "encoding/json"
+  "io/ioutil"
   "strconv"
   "fmt"
   "log"
   "os"
-
+  "net/http"
   "dapp/rollups"
+  "bytes"
 )
 
 var (
@@ -22,6 +23,34 @@ func HandleAdvance(data *rollups.AdvanceResponse) error {
     return fmt.Errorf("HandleAdvance: failed marshaling json: %w", err)
   }
   infolog.Println("Received advance request data", string(dataMarshal))
+  
+  lambada_server_url, _ := os.LookupEnv("LAMBADA_HTTP_SERVER_URL")
+  open_state_url := fmt.Sprintf("%s/open_state", lambada_server_url)
+  response, err := http.Get(open_state_url)
+
+  if err != nil {
+    log.Fatalf("Failed to open state: %v", err)
+  }
+  defer response.Body.Close()
+  fmt.Println("State opened successfully.")
+
+  set_state_url := fmt.Sprintf("%s/set_state/output", lambada_server_url)
+  response, err = http.Post(set_state_url, "application/octet-stream", bytes.NewBuffer([]byte("hello world")))
+
+  if err != nil {
+    log.Fatalf("Failed to set state: %v", err)
+  }
+  defer response.Body.Close()
+  fmt.Println("State set successfully.")
+
+  commit_state_url := fmt.Sprintf("%s/commit_state", lambada_server_url)
+  response, err = http.Get(commit_state_url)
+
+  if err != nil {
+    log.Fatalf("Failed to commit state: %v", err)
+  }
+  defer response.Body.Close()
+
   return nil
 }
 

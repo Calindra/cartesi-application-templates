@@ -7,9 +7,46 @@ end
 
 def handle_advance(data)
   log("Received advance request data #{data}")
-  payload = data['payload']
-  # TODO: add application logic here
-  return "accept";
+  lambada_server_url = ENV['LAMBADA_HTTP_SERVER_URL']
+
+  if lambada_server_url
+
+    response_open_state = HTTP.get("#{lambada_server_url}/open_state", {
+      headers: {
+      'Content-Type': 'application/json'
+      },
+    });
+  
+    if !response_open_state.status.success?
+      return "Failed to open state: #{response_open_state.code}"
+    end
+    log("State opened successfully.")
+
+    response_set_state = HTTP.post("#{lambada_server_url}/set_state/output", {
+      body: 'hello world',
+      headers: {
+      'Content-Type': 'application/octet-stream'
+      },
+    });
+    
+    if !response_set_state.status.success?
+      return "Failed to set state: #{response_set_state.code}"
+    end
+    log("State set successfully.")
+
+    response_commit_state = HTTP.get("#{lambada_server_url}/commit_state", {
+      headers: {
+      'Content-Type': 'application/json'
+      },
+    });
+  
+    if !response_commit_state.status.success?
+      return "Failed to commit state: #{response_commit_state.code}"
+    end
+    log("State committed successfully.")
+  end
+  
+  'accept'
 end
 
 def handle_inspect(data)

@@ -28,7 +28,43 @@ end
 local handlers = {}
 function handlers.advance_state(data)
     info("Received advance request data %s", json.encode(data))
-    -- TODO: add application code here
+    local lambada_server_addr = os.getenv("LAMBADA_HTTP_SERVER_URL")
+    if lambada_server_addr then
+        local response, err
+
+        response, err = http.request {
+            method = "GET",
+            url = lambada_server_addr .. "/open_state",
+            headers = { ["Content-Type"] = "application/json" },
+        }
+        if not response then
+            return "Failed to open state: " .. err
+        end
+        print("State opened successfully.")
+
+        local request_body = "hello world"
+
+        response, err = http.request {
+            method = "POST",
+            url = lambada_server_addr .. "/set_state/output",
+            headers = { ["Content-Type"] = "application/octet-stream" },
+            source = ltn12.source.string(request_body),
+        }
+        if not response then
+            return "Failed to set state: " .. err
+        end
+        print("State set successfully.")
+
+        response, err = http.request {
+            method = "GET",
+            url = lambada_server_addr .. "/commit_state",
+            headers = { ["Content-Type"] = "application/json" },
+        }
+        if not response then
+            return "Failed to commit state: " .. err
+        end
+        print("State committed successfully.")
+    end
     return "accept"
 end
 
