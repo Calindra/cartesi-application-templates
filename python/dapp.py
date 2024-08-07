@@ -13,8 +13,30 @@ logger.info(f"Lambada server is {lambada_server}")
 
 def handle_advance(data):
     logger.info(f"Received advance request data {data}")
-    requests.get(lambada_server + "/open_state")
-    requests.get(lambada_server + "/commit_state")
+    if lambada_server:
+        try: 
+            response = requests.get(lambada_server + "/open_state")
+            response.raise_for_status() 
+        except requests.exceptions.HTTPError as errh: 
+            return "Failed to open state: {errh}"
+
+        print("State opened successfully.")
+
+        try: 
+            response = requests.post(lambada_server + "/set_state/output", data = "hello world", headers={'Content-Type': 'application/octet-stream'})
+            response.raise_for_status() 
+        except requests.exceptions.HTTPError as errh: 
+            return "Failed to set state: {errh}"
+
+        print("State set successfully.")
+
+        try: 
+            response = requests.get(lambada_server + "/commit_state")
+            response.raise_for_status() 
+        except requests.exceptions.HTTPError as errh: 
+            return "Failed to commit state: {errh}"
+
+        print("State committed successfully.")
     return "accept"
 
 

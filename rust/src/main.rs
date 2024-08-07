@@ -46,8 +46,6 @@ pub async fn handle_advance(
             let response = client.request(request).await;
 
             if let Err(err) = response {
-                println!("State committed err. {:?}", err);
-
                 return Err(format!("Failed to commit state: {}", err).into());
             }
             // This will never show as we did the job and the runtime stopped us

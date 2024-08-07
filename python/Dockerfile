@@ -4,7 +4,7 @@ FROM --platform=linux/riscv64 cartesi/python:3.10-slim-jammy
 
 LABEL io.cartesi.rollups.sdk_version=devel
 LABEL io.cartesi.rollups.ram_size=128Mi
-LABEL io.cartesi.rollups.sdk=cartesi/sdk
+LABEL io.cartesi.rollups.sdk_name=zippiehq/cartesi-lambada-sdk
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN <<EOF
@@ -16,7 +16,7 @@ rm -rf /var/lib/apt/lists/* /var/log/* /var/cache/*
 useradd --create-home --user-group dapp
 EOF
 
-ARG MACHINE_EMULATOR_TOOLS_VERSION=0.15.6
+ARG MACHINE_EMULATOR_TOOLS_VERSION=0.15.7
 ADD https://github.com/zippiehq/cartesi-lambada-guest-tools/releases/download/v${MACHINE_EMULATOR_TOOLS_VERSION}/machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb /
 RUN dpkg -i /machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb \
   && rm /machine-emulator-tools-v${MACHINE_EMULATOR_TOOLS_VERSION}.deb
