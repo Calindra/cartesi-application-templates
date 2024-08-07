@@ -1,8 +1,6 @@
 use hyper::Body;
-use ipfs_api::{IpfsApi, IpfsClient, TryFromUri};
 use json::{object, JsonValue};
 use std::env;
-use std::io::Cursor;
 
 pub async fn handle_advance(
     client: &hyper::Client<hyper::client::HttpConnector>,
@@ -25,17 +23,18 @@ pub async fn handle_advance(
             }
             println!("State opened successfully.");
 
-            let ipfs_addr = env::var("IPFS_API").unwrap_or("http://127.0.0.1:5001".to_string());
-            let ipfs_client = IpfsClient::from_str(&ipfs_addr).unwrap();
+            let request = hyper::Request::builder()
+                .method(hyper::Method::POST)
+                .header(hyper::header::CONTENT_TYPE, "application/octet-stream")
+                .uri(format!("{}/set_state/output", &lambada_server_addr))
+                .body(Body::from("hello world".as_bytes()))?;
 
-            // Creates a new directory only if such directory does not already exist.
-            ipfs_client.files_mkdir("/state", false).await;
+            let response = client.request(request).await;
 
-            let data = Cursor::new("hello world");
-            ipfs_client
-                .files_write("/state/output.file", true, true, data)
-                .await
-                .unwrap();
+            if let Err(err) = response {
+                return Err(format!("Failed to set state: {}", err).into());
+            }
+            println!("State set successfully.");
 
             let request = hyper::Request::builder()
                 .method(hyper::Method::GET)

@@ -1,7 +1,6 @@
 import createClient from "openapi-fetch";
 import { components, paths } from "./schema";
 import process from "process";
-import { create } from "kubo-rpc-client";
 import crypto from "crypto";
 
 type AdvanceRequestData = components["schemas"]["Advance"];
@@ -12,43 +11,12 @@ type AdvanceRequestHandler = (
 ) => Promise<RequestHandlerResult>;
 
 const apiUrl = process.env.IPFS_API || "http://127.0.0.1:5001";
-const ipfs = create({ url: apiUrl });
 
 const rollupServer = process.env.ROLLUP_HTTP_SERVER_URL;
 console.log("HTTP rollup_server url is " + rollupServer);
 
 const lambadaServer = process.env.LAMBADA_HTTP_SERVER_URL;
 console.log("Lambada server url is " + lambadaServer);
-
-async function existFileIpfs(path: string): Promise<boolean> {
-  try {
-    await ipfs.files.stat(path);
-    return true;
-  } catch (error) {
-    if ((error as Error).message.includes("file does not exist")) return false;
-    throw error;
-  }
-}
-
-async function readFileIpfs(path: string): Promise<string> {
-  try {
-    const chunks = [];
-    for await (const chunk of ipfs.files.read(path)) {
-      chunks.push(chunk);
-    }
-    const data = Buffer.concat(chunks).toString();
-    return data;
-  } catch (error) {
-    if ((error as Error).message.includes("file does not exist")) return "";
-    throw error;
-  }
-}
-
-async function writeFileIpfs(path: string, data: string): Promise<void> {
-  const exist = await existFileIpfs(path);
-  if (exist) await ipfs.files.rm(path); // Remove file if exists (if new data is less than old data, the old data will remain in the file)
-  await ipfs.files.write(path, data, { create: true });
-}
 
 const handleAdvance: AdvanceRequestHandler = async (
   data: AdvanceRequestData
@@ -65,11 +33,23 @@ const handleAdvance: AdvanceRequestHandler = async (
     }
     console.log("State opened successfully.");
   }
-  if (!(await existFileIpfs("/state"))) {
-    await ipfs.files.mkdir("/state");
-  }
   
-  await writeFileIpfs("/state/output", "hello world");
+  if (lambadaServer) {
+    const setStateResponse = await fetch(`${lambadaServer}/set_state/output`, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/octet-stream',
+      },
+      body: 'hello world'
+    });
+    // Optional: Check if the request was successful
+    if (!setStateResponse.ok) {
+      throw new Error(
+        `Failed to set state: ${setStateResponse.status} ${setStateResponse.statusText}`
+      );
+    }
+    console.log("State set successfully.");
+  }
 
   // unless something happens we will commit in the end, else we cause an exception
   
