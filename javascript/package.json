@@ -3,7 +3,10 @@
   "version": "0.1.0",
   "description": "JS DApp",
   "dependencies": {
-    "ethers": "^6.7.1"
+    "ethers": "^6.7.1",
+    "node-fetch": "^3.3.2",
+    "openapi-fetch": "^0.7",
+    "viem": "^1"
   },
   "devDependencies": {
     "esbuild": "^0.19.2"
