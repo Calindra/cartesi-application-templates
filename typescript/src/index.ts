@@ -1,13 +1,12 @@
 import createClient from "openapi-fetch";
-import { components, paths } from "./schema";
+import type { components, paths } from "./schema";
 import process from "process";
-import crypto from "crypto";
 
 type AdvanceRequestData = components["schemas"]["Advance"];
 type RequestHandlerResult = components["schemas"]["Finish"]["status"];
 type RollupsRequest = components["schemas"]["RollupRequest"];
 type AdvanceRequestHandler = (
-  data: AdvanceRequestData
+  data: AdvanceRequestData,
 ) => Promise<RequestHandlerResult>;
 
 const apiUrl = process.env.IPFS_API || "http://127.0.0.1:5001";
@@ -19,7 +18,7 @@ const lambadaServer = process.env.LAMBADA_HTTP_SERVER_URL;
 console.log("Lambada server url is " + lambadaServer);
 
 const handleAdvance: AdvanceRequestHandler = async (
-  data: AdvanceRequestData
+  data: AdvanceRequestData,
 ) => {
   console.log("Received advance request data " + JSON.stringify(data));
   // Make a GET request to open_state endpoint
@@ -28,38 +27,38 @@ const handleAdvance: AdvanceRequestHandler = async (
     // Optional: Check if the request was successful
     if (!openStateResponse.ok) {
       throw new Error(
-        `Failed to open state: ${openStateResponse.status} ${openStateResponse.statusText}`
+        `Failed to open state: ${openStateResponse.status} ${openStateResponse.statusText}`,
       );
     }
     console.log("State opened successfully.");
   }
-  
+
   if (lambadaServer) {
     const setStateResponse = await fetch(`${lambadaServer}/set_state/output`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'content-type': 'application/octet-stream',
+        "content-type": "application/octet-stream",
       },
-      body: 'hello world'
+      body: "hello world",
     });
     // Optional: Check if the request was successful
     if (!setStateResponse.ok) {
       throw new Error(
-        `Failed to set state: ${setStateResponse.status} ${setStateResponse.statusText}`
+        `Failed to set state: ${setStateResponse.status} ${setStateResponse.statusText}`,
       );
     }
     console.log("State set successfully.");
   }
 
   // unless something happens we will commit in the end, else we cause an exception
-  
+
   // Make a GET request to commit_state endpoint if we have a lambada server
   if (lambadaServer) {
     const commitStateResponse = await fetch(`${lambadaServer}/commit_state`);
     // Optional: Check if the request was successful
     if (!commitStateResponse.ok) {
       throw new Error(
-        `Failed to commit state: ${commitStateResponse.status} ${commitStateResponse.statusText}`
+        `Failed to commit state: ${commitStateResponse.status} ${commitStateResponse.statusText}`,
       );
     }
     // This will never show as we did the job and the runtime stopped us
